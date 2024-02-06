@@ -1,0 +1,69 @@
+﻿@using ShortLink.Models
+
+@model Link
+
+<div class="text-center mt-5">
+    <form id="link-form" method="POST" asp-controller="Generate" asp-action="CreateShortLink">
+        <div class="form-group">
+            <label class="mb-3 mt-3" asp-for="OriginalUrl"></label>
+            <input id="original-url-input" class="form-control mb-3" asp-for="OriginalUrl" />
+            <input class="btn btn-primary mb-3" type="submit" value="Сгенерировать" />
+        </div>
+    </form>
+</div>
+
+
+<div>
+    <p>Короткая ссылка: <a id="short-url-result" href="#S" target="_blank"></a></p>
+    <button onclick={shareLink()} class="btn btn-primary">Поделиться</button>
+    <button onclick={copyToClipboard()} class="btn btn-primary">Копировать</button>
+</div>
+
+
+<script>
+    document.getElementById("link-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        let originalUrl = document.getElementById("original-url-input").value;
+
+        fetch("/Generate/CreateShortLink?originalUrl=" + originalUrl, {
+            method: "POST"
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("short-url-result").innerText = "localhost:44387/r/" + data;
+                document.getElementById("short-url-result").href = "/r/" + data;
+            });
+
+        originalUrl = "";
+    });
+</script>
+
+<script>
+    let copyToClipboard = () => {
+        let text = "https://localhost:7279" + document.getElementById("short-url-result").getAttribute("href");
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Ссылка скопирована в буфер обмена!");
+        }, (err) => {
+            console.error("Ошибка копирования", err);
+        });
+    }
+
+    let shareLink = () => {
+        let text = "https://localhost:7279" + document.getElementById("short-url-result").getAttribute("href");
+        if (navigator.share) {
+            navigator.share({
+                title: "Поделиться ссылкой",
+                text: "Проверь эту ссылку",
+                url: text
+            }).then(() => {
+                console.log("Ссылкой успешно поделились");
+            }).catch((error) => {
+                console.log("Ошибка при попытке поделиться ссылкой" + error)
+            });
+        } else {
+            alert('Ваш браузер не поддерживает функцию "Поделиться"');
+        }
+    }
+
+</script>
